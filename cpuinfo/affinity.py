@@ -32,9 +32,9 @@ try:
     
     if _libc.sched_getaffinity and _libc.sched_setaffinity:
         __setaffinity = _libc.sched_setaffinity
-        __setaffinity.argtypes = [ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_ulong)]
+        __setaffinity.argtypes = [ctypes.c_int, ctypes.c_size_t, ctypes.POINTER(ctypes.c_ulong)]
         __getaffinity = _libc.sched_getaffinity
-        __getaffinity.argtypes = [ctypes.c_int, ctypes.c_ulong, ctypes.POINTER(ctypes.c_ulong)]
+        __getaffinity.argtypes = [ctypes.c_int, ctypes.c_size_t, ctypes.POINTER(ctypes.c_ulong)]
 
     def get_affinity(pid=0):
         mask = ctypes.c_ulong(0)
@@ -43,7 +43,7 @@ try:
             raise OSError
         return mask.value
 
-    def set_affinity(pid=0,mask=0):
+    def set_affinity(pid=0, mask=1):
         mask = ctypes.c_ulong(mask)
         c_ulong_size = ctypes.sizeof(ctypes.c_ulong)
         if __setaffinity(pid, c_ulong_size, mask) < 0:
@@ -127,26 +127,20 @@ except (ImportError,AttributeError):
                 mask_sys  = ctypes.c_uint(0)
                 if not __getaffinity(hProc, mask_proc, mask_sys):
                     raise ValueError
-                
+
                 __close_handle(hProc)
                 
                 return mask_proc.value
 
             def set_affinity(pid=0, mask=1):
                 hProc = __open_process(pid, ro=False)
-                    
-                mask_proc_old = ctypes.c_uint(0)
-                mask_sys_old  = ctypes.c_uint(0)
-                if not __getaffinity(hProc, mask_proc_old, mask_sys_old):
-                    raise ValueError
 
                 mask_proc = ctypes.c_uint(mask)
                 res = __setaffinity(hProc, mask_proc)
                 __close_handle(hProc)
                 if not res:
                     raise OSError
-                
-                return mask_proc_old.value
+                return
             
         except (ImportError, AttributeError) as e:
             u"""
