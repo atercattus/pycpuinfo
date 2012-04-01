@@ -8,9 +8,10 @@ def __search_so(name):
 
     res = []
     for dir in directories:
-        for file in os.listdir(dir):
-            if file.startswith(name):
-                res.append( os.path.join(dir, file) )
+        if os.path.isdir(dir):
+            for file in os.listdir(dir):
+                if file.startswith(name):
+                    res.append( os.path.join(dir, file) )
     return res
 
 def __load_libc():
@@ -28,7 +29,7 @@ try:
     """
     _libc = __load_libc()
     if not _libc:
-        raise OSError
+        raise ImportError # not Linux
     
     if _libc.sched_getaffinity and _libc.sched_setaffinity:
         __setaffinity = _libc.sched_setaffinity
